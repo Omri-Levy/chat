@@ -1,6 +1,4 @@
-const {redisClient} = require("../libs/redis");
-
-class RedisStore {
+class StoreClient {
     constructor(redisClient) {
         this.redisStore = redisClient;
     }
@@ -59,8 +57,8 @@ class RedisStore {
         return JSON.parse(user);
     }
 }
-const redisStore = new RedisStore(redisClient);
+
 
 module.exports = {
-    redisStore,
+    StoreClient,
 }

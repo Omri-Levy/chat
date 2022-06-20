@@ -1,11 +1,11 @@
 const {createClient} = require('ioredis');
-const redisClient = createClient({
+const pubClient = createClient({
     host: 'redis',
     port: 6379,
 });
-const subClient = redisClient.duplicate();
+const subClient = pubClient.duplicate();
 
-redisClient.on('error', (err) => {
+pubClient.on('error', (err) => {
     console.error(err);
 });
 
@@ -14,6 +14,6 @@ subClient.on('error', (err) => {
 });
 
 module.exports = {
-    redisClient,
+    pubClient,
     subClient,
 }
