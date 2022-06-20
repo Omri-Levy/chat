@@ -5,7 +5,7 @@ const form = document.getElementById('form');
 const input = document.getElementById('input');
 const messages = document.getElementById('messages');
 const pageTitle = document.querySelector('header h1');
-const socket = io(`http://${document.location.hostname}:80`, {
+const socket = io(`http://${document.location.hostname}:3000`, {
     query: {
         username,
         room,

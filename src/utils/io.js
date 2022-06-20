@@ -9,33 +9,32 @@ class Io {
             subClient,
         ));
         this.io.use(this.handleSession.bind(this));
-        this.io.on('connection', this.onConnection.bind(this))
+        this.io.on('connection', this.onConnection.bind(this));
     }
 
     async onConnection(socket) {
         console.log('Client connected');
 
-        this.socket = socket;
-        const joinedMessage = `${this.socket.username} joined the room!`;
-        const welcomeMessage = `Welcome to ${this.socket.room}, ${this.socket.username}!`;
-        const messages = await this.redisStore.findMessages(this.socket.room);
-        const users = await this.redisStore.findUsers(this.socket.room);
+        const joinedMessage = `${socket.username} joined the room!`;
+        const welcomeMessage = `Welcome to ${socket.room}, ${socket.username}!`;
+        const messages = await this.redisStore.findMessages(socket.room);
+        const users = await this.redisStore.findUsers(socket.room);
 
-        this.socket.join(this.socket.room);
+        socket.join(socket.room);
 
         messages.forEach((message) => {
-            this.io.to(this.socket.room).emit(...this.emitMessage(message));
+            this.io.to(socket.room).emit(...this.emitMessage(message));
         });
 
-        this.socket.emit("users", users);
-        this.socket.emit(
+        socket.emit("users", users);
+        socket.emit(
             ...this.emitMessage(this.generateSystemMessage(welcomeMessage))
         );
-        this.socket.to(this.socket.room).emit(
+        socket.to(socket.room).emit(
             ...this.emitMessage(this.generateSystemMessage(joinedMessage))
         );
-        this.socket.on('message', this.onMessage.bind(this));
-        this.socket.on('disconnect', this.onDisconnect.bind(this));
+        socket.on('message', this.onMessage(socket).bind(this));
+        socket.on('disconnect', this.onDisconnect(socket).bind(this));
     };
 
     async handleSession(socket, next) {
@@ -91,19 +90,27 @@ class Io {
         });
     }
 
-    onMessage(message) {
-        this.socket.to(this.socket.room).emit('message', message);
-        this.redisStore.saveMessage(this.socket.room, message);
+    onMessage(socket) {
+        return function(message) {
+            socket
+                .to(socket.room)
+                .emit('message', message);
+            this.redisStore.saveMessage(socket.room, message);
+        }
     }
 
-    async onDisconnect() {
-        console.log('Client disconnected');
+    onDisconnect(socket) {
+        return function() {
+            console.log('Client disconnected');
 
-        const leftMessage = `${this.socket.username} left the room!`
+            const leftMessage = `${socket.username} left the room!`
 
-        this.io.to(this.socket.room).emit(...this.emitMessage(this.generateSystemMessage(leftMessage)));
-        this.redisStore.deleteUser(this.socket.room, this.socket.username);
-    };
+            this.io
+                .to(socket.room)
+                .emit(...this.emitMessage(this.generateSystemMessage(leftMessage)));
+            this.redisStore.deleteUser(socket.room, socket.username);
+        }
+    }
 
 }
 
