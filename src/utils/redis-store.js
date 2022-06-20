@@ -1,4 +1,4 @@
-const {redisClient} = require("./redis");
+const {redisClient} = require("../libs/redis");
 
 class RedisStore {
     constructor(redisClient) {
