@@ -3,12 +3,12 @@ ENV NODE_ENV production
 
 WORKDIR /app
 
-COPY package*.json ./
-COPY .env ./
+COPY ../package*.json ./
+COPY ../.env ./
 
 RUN npm ci
 
-COPY ./src ./src
+COPY ../src ./src
 
 EXPOSE 80
 

@@ -1,0 +1,28 @@
+version: '3.9'
+services:
+  haproxy:
+    container_name: haproxy
+    image: haproxy:1.8.30
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+        - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    restart: always
+    depends_on:
+      - server
+  server:
+    container_name: server
+    build:
+        context: ..
+        dockerfile: ./infra/Dockerfile.dev
+    restart: always
+    depends_on:
+      - redis
+    volumes:
+      - ..:/app
+  redis:
+    container_name: redis
+    image: redis
+    ports:
+      - "6379:6379"

@@ -14,8 +14,8 @@ services:
   server:
     container_name: server
     build:
-        context: .
-        dockerfile: Dockerfile
+        context: ..
+        dockerfile: ./infra/Dockerfile
     restart: always
     depends_on:
       - redis
