@@ -16,4 +16,11 @@ const onAvailableRooms = (rooms) => {
     })
 }
 
+const onError = (error) => {
+    if (!error) return;
+
+    alert(error);
+}
+
+socket.on('error', onError);
 socket.on('available-rooms', onAvailableRooms);

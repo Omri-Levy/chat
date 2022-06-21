@@ -7,7 +7,7 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/views/index.html');
 })
 
-app.get('/chat', (req, res) => {
+app.get('/chat', async (req, res) => {
     res.sendFile(__dirname + '/views/chat.html');
 })
 

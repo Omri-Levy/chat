@@ -1,5 +1,5 @@
 const searchParams = new URLSearchParams(window.location.search);
-const username = searchParams.get('username') ?? prompt('Username:\n') ?? 'Anonymous';
+const username = searchParams.get('username') || prompt('Username:\n') || 'Anonymous';
 searchParams.set('username', username);
 const newPath = `${window.location.pathname}?${searchParams.toString()}`;
 
@@ -67,14 +67,32 @@ const onSubmit = (e) => {
 
     renderMessage(message);
 
-    socket.emit('message', message);
+    socket.emit('message', message, (err) => {
+        if (!err) return;
+
+        alert(err);
+    });
     input.value = '';
 }
 
-const onConnectError = (message) => {
-    if (!message.body) return;
+const onConnectError = (payload) => {
+    if (!(payload instanceof Error)) {
+        return renderMessage(payload);
+    }
 
-    renderMessage(message);
+    if (payload.message === 'Validation Error') {
+            alert(payload.data.join('\n'));
+
+            return window.location.href = `/`;
+    } else {
+        alert(payload.message);
+    }
+}
+
+const onError = (error) => {
+    if (!error) return;
+
+    alert(error);
 }
 
 const onUsers = (usersArr) => {
@@ -98,5 +116,6 @@ pageTitle.innerText = `Room name: ${room}`;
 socket.on('message', renderMessage);
 socket.on('users', onUsers);
 socket.on('connect_error', onConnectError);
+socket.on('error', onError);
 form.addEventListener('submit', onSubmit);
 window.addEventListener('pageshow', onPageshow)

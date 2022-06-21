@@ -4,73 +4,137 @@ class StoreClient {
     }
 
     async findMessages(room) {
-        const messages= await this.redisStore
-            .lrange(`message:${room}`, 0, 10);
+        try {
+            const messages = await this.redisStore
+                .lrange(`message:${room}`, 0, 10);
 
-        return messages.map((message) => JSON.parse(message));
+            return {
+                messages: messages.map((message) => JSON.parse(message))
+            };
+        } catch {
+            return {
+                error: 'Something went wrong...',
+        }
+        }
     }
 
     async saveMessage(room, message) {
-        const messagesLen = await this.redisStore
-            .rpush(`message:${room}`, JSON.stringify(message))
+        try {
+            const messagesLen = await this.redisStore
+                .rpush(`message:${room}`, JSON.stringify(message))
 
-        if (messagesLen > 10) {
-            return this.redisStore.lpop(`message:${room}`);
+            if (messagesLen > 10) {
+                this.redisStore.lpop(`message:${room}`);
+            }
+
+            return {};
+        } catch {
+            return {
+                error: 'Something went wrong...',
+            }
         }
     }
 
     async saveUser(room, user) {
-        return this.redisStore
-            .hset(
-                `user:${room}`,
-                user.username,
-                JSON.stringify(user)
-            );
+       try {
+           await this.redisStore
+               .hset(
+                   `user:${room}`,
+                   user.username,
+                   JSON.stringify(user)
+               );
+
+           return {};
+       } catch {
+           return {
+               error: 'Something went wrong...',
+           }
+       }
 
     }
 
     async findUsers(room) {
-        const users = await this.redisStore
-            .hgetall(
-                `user:${room}`,
-            );
-        const values = Object.values(users);
+       try {
+           const users = await this.redisStore
+               .hgetall(
+                   `user:${room}`,
+               );
+           const values = Object.values(users);
 
-        return values.map((user) => JSON.parse(user));
+           return {
+               users: values.map((user) => JSON.parse(user))
+           };
+       } catch {
+           return {
+               error: 'Something went wrong...',
+           }
+       }
     }
 
-    async deleteUser(room, id) {
-        return this.redisStore
-            .hdel(
-                `user:${room}`,
-                id,
-            );
+    async deleteUser(room, name) {
+        try {
+            await this.redisStore
+                .hdel(
+                    `user:${room}`,
+                    name,
+                );
+
+            return {};
+        } catch {
+            return {
+                error: `Could not delete user:${room} with name ${name}`
+            }
+        }
     }
 
     async findUser(room, id) {
-        const user = await this.redisStore
-            .hget(
-                `user:${room}`,
-                id,
-            );
+        try {
+            const user = await this.redisStore
+                .hget(
+                    `user:${room}`,
+                    id,
+                );
 
-        return JSON.parse(user);
+            return {
+                user: JSON.parse(user),
+            };
+        } catch {
+            return {
+                error: 'Something went wrong...',
+            }
+        }
     }
 
     async saveRoom(room, subsCount) {
-        if (!room) return;
+        try {
+            if (!room) return;
 
-        return this.redisStore.hset('rooms', room, JSON.stringify({
-            room,
-            subsCount,
-        }));
+            await this.redisStore.hset('rooms', room, JSON.stringify({
+                room,
+                subsCount,
+            }));
+
+            return {};
+        } catch {
+            return {
+                error: 'Something went wrong...',
+            }
+        }
     }
 
     async findRooms() {
-        const rooms = await this.redisStore.hgetall('rooms');
-        const values = Object.values(rooms);
+        try {
+            const rooms = await this.redisStore.hgetall('rooms');
+            const values = Object.values(rooms);
 
-        return values.map((room) => JSON.parse(room));
+            return {
+                rooms: values.map((room) => JSON.parse(room)),
+            }
+        } catch {
+            return {
+                error: 'Something went wrong...',
+            }
+        }
     }
 }
 
