@@ -2,6 +2,11 @@ const {createAdapter} = require("@socket.io/redis-adapter");
 const {z} = require("zod");
 const createDOMPurify = require('dompurify');
 const {JSDOM} = require("jsdom");
+const window = new JSDOM('').window;
+const DOMPurify = createDOMPurify(window);
+const Filter = require("bad-words");
+const marked = require("marked");
+const emoji = require("node-emoji");
 
 const zParse = async (schema, payload) => {
         const {error, data} = await schema.safeParseAsync(payload);
@@ -85,11 +90,9 @@ class Io {
     }
 
     async handleSession(socket, next) {
-        const window = new JSDOM('').window;
-        const DOMPurify = createDOMPurify(window);
         const sanitized = {
-            room: DOMPurify.sanitize(socket.handshake.query.room),
-            username: DOMPurify.sanitize(socket.handshake.query.username),
+            room: DOMPurify.sanitize(socket.handshake.query.room).trim(),
+            username: DOMPurify.sanitize(socket.handshake.query.username).trim(),
         }
         const querySchema = z.object({
             room: z.string({
@@ -179,16 +182,30 @@ class Io {
     }
 
     onMessage(socket) {
-        return async function(message, cb) {
+        return async function(body, cb) {
+            const filter = new Filter();
+            const sanitized = DOMPurify.sanitize(body.trim());
+            const markdown = marked.parse(sanitized);
+            const profanity = filter.clean(markdown);
+            const emojifi = emoji.emojify(profanity);
+            const message = {
+                from: socket.username,
+                body: emojifi
+                    .replace(/\n/g, '<br/>'),
+                timestamp: new Date(),
+            }
             const {error} = await this.storeClient.saveMessage(socket.room, message);
 
             if (error) {
                 return cb(error);
             }
 
-            socket
+            this.io
+                .of('/chat')
                 .to(socket.room)
                 .emit('message', message);
+
+            cb();
         }
     }
 

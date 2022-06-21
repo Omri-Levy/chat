@@ -43,7 +43,7 @@ const renderMessage = ({from, body, timestamp}) => {
         <li>
             <div class="message-container">
                 <strong>${from === username ? 'You' : from}:</strong>
-                <p class="message">${body}</p>
+                <div class="message">${body}</div>
             </div>
             <time class="timestamp">${formattedDate}</time>
          </li>
@@ -60,15 +60,7 @@ const onSubmit = (e) => {
 
     if (!body) return;
 
-    const message = {
-        body,
-        from: username,
-        timestamp: new Date()
-    };
-
-    renderMessage(message);
-
-    socket.timeout(5000).emit('message', message, (res, err) => {
+    socket.timeout(5000).emit('message', body, (res, err) => {
         if (!err && !res) return;
 
         let message = err ?? res?.message;
