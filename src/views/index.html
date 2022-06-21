@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Chat</title>
     <link rel="stylesheet" href="/index.css" type="text/css"/>
 </head>
 <body>
 <div class="container">
-    <header>
         <h1>Lobby</h1>
-    </header>
 <form action="/chat" class="lobby-form">
-    <div>
     <label for="room-name">Room Name:</label>
     <input id="room-name" name="room" placeholder="Type here..."/>
-    </div>
-    <div>
-    <label for="username">Username:</label>
-    <input id="username" name="username" placeholder="Type here..."/>
-    </div>
-    <div class="form-submit">
-        <button type="submit">Join</button>
-    </div>
+    <button type="submit">Join</button>
 </form>
 </div>
+<div class="container">
+    <h2>Available Rooms</h2>
+    <ul class="available-rooms"></ul>
+</div>
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
+<script src="/index.js"></script>
 </body>
 </html>

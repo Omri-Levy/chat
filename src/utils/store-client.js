@@ -30,13 +30,13 @@ class StoreClient {
     }
 
     async findUsers(room) {
-        return this.redisStore
+        const users = await this.redisStore
             .hgetall(
                 `user:${room}`,
-            )
-            .then((users) => {
-                return Object.values(users).map((user) => JSON.parse(user));
-            });
+            );
+        const values = Object.values(users);
+
+        return values.map((user) => JSON.parse(user));
     }
 
     async deleteUser(room, id) {
@@ -55,6 +55,22 @@ class StoreClient {
             );
 
         return JSON.parse(user);
+    }
+
+    async saveRoom(room, subsCount) {
+        if (!room) return;
+
+        return this.redisStore.hset('rooms', room, JSON.stringify({
+            room,
+            subsCount,
+        }));
+    }
+
+    async findRooms() {
+        const rooms = await this.redisStore.hgetall('rooms');
+        const values = Object.values(rooms);
+
+        return values.map((room) => JSON.parse(room));
     }
 }
 

@@ -1,15 +1,27 @@
 const {createAdapter} = require("@socket.io/redis-adapter");
 
 class Io {
-    constructor(io, redisStore, pubClient, subClient) {
-        this.redisStore = redisStore;
+
+    constructor(io, storeClient, pubClient, subClient) {
+        this.storeClient = storeClient;
         this.io = io;
         this.io.adapter(createAdapter(
             pubClient,
             subClient,
         ));
-        this.io.use(this.handleSession.bind(this));
-        this.io.on('connection', this.onConnection.bind(this));
+        this.io.of('/chat').use(this.handleSession.bind(this));
+        this.io.of('/chat').on('connection', this.onConnection.bind(this));
+        this.io.on('connection', async () => {
+            const rooms = await this.storeClient.findRooms();
+
+            this.io.emit("available-rooms", rooms);
+        });
+    }
+
+    async onUsers(socket) {
+        const users = await this.storeClient.findUsers(socket.room);
+
+        this.io.of('/chat').to(socket.room).emit("users", users);
     }
 
     async onConnection(socket) {
@@ -17,16 +29,16 @@ class Io {
 
         const joinedMessage = `${socket.username} joined the room!`;
         const welcomeMessage = `Welcome to ${socket.room}, ${socket.username}!`;
-        const messages = await this.redisStore.findMessages(socket.room);
-        const users = await this.redisStore.findUsers(socket.room);
+        const messages = await this.storeClient.findMessages(socket.room);
 
         socket.join(socket.room);
+        await this.updateSubsCount(socket.room);
 
         messages.forEach((message) => {
             this.io.to(socket.room).emit(...this.emitMessage(message));
         });
 
-        socket.emit("users", users);
+        this.onUsers(socket);
         socket.emit(
             ...this.emitMessage(this.generateSystemMessage(welcomeMessage))
         );
@@ -37,10 +49,14 @@ class Io {
         socket.on('disconnect', this.onDisconnect(socket).bind(this));
     };
 
+    getSubsCount(room) {
+        return this.io.of('/chat').adapter.rooms.get(room)?.size ?? 0;
+    }
+
     async handleSession(socket, next) {
         const room = socket.handshake.query.room;
         const username = socket.handshake.query.username;
-        const user = await this.redisStore.findUser(room, username);
+        const user = await this.storeClient.findUser(room, username);
 
         if (user) {
             socket.room = user.room;
@@ -60,7 +76,7 @@ class Io {
         socket.room = room;
         socket.username = username;
 
-        await this.redisStore.saveUser(socket.room, {
+        await this.storeClient.saveUser(socket.room, {
             room: socket.room,
             username: socket.username,
         });
@@ -95,7 +111,7 @@ class Io {
             socket
                 .to(socket.room)
                 .emit('message', message);
-            this.redisStore.saveMessage(socket.room, message);
+            this.storeClient.saveMessage(socket.room, message);
         }
     }
 
@@ -106,12 +122,22 @@ class Io {
             const leftMessage = `${socket.username} left the room!`
 
             this.io
+                .of('/chat')
                 .to(socket.room)
                 .emit(...this.emitMessage(this.generateSystemMessage(leftMessage)));
-            this.redisStore.deleteUser(socket.room, socket.username);
+            this.storeClient.deleteUser(socket.room, socket.username);
+            this.onUsers(socket);
+            this.updateSubsCount(socket.room);
         }
     }
 
+    async updateSubsCount(room) {
+            const subsCount = this.getSubsCount(room);
+            await this.storeClient.saveRoom(room, subsCount);
+            const rooms = await this.storeClient.findRooms();
+
+            this.io.emit("available-rooms", rooms);
+    }
 }
 
 module.exports = {

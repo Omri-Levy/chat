@@ -1,15 +1,21 @@
 const searchParams = new URLSearchParams(window.location.search);
-const username = searchParams.get('username') ?? 'Anonymous';
+const username = searchParams.get('username') ?? prompt('Username:\n') ?? 'Anonymous';
+searchParams.set('username', username);
+const newPath = `${window.location.pathname}?${searchParams.toString()}`;
+
+history.replaceState(null, '', newPath);
+
 const room = searchParams.get('room') ?? 'General';
+const users = document.querySelector('.users');
 const form = document.getElementById('form');
 const input = document.getElementById('input');
 const messages = document.getElementById('messages');
-const pageTitle = document.querySelector('header h1');
-const socket = io(`http://${document.location.hostname}:3000`, {
+const pageTitle = document.querySelector('h1');
+const socket = io(`http://${document.location.hostname}:80/chat`, {
     query: {
         username,
         room,
-    }
+    },
 });
 
 const renderMessage = ({from, body, timestamp}) => {
@@ -71,7 +77,26 @@ const onConnectError = (message) => {
     renderMessage(message);
 }
 
+const onUsers = (usersArr) => {
+    users.innerHTML = ``;
+
+    usersArr.forEach(({username}) => {
+        const user = document.createElement('li');
+
+        user.textContent = username;
+        users.appendChild(user);
+    })
+}
+
+const onPageshow = (e) => {
+    if (!e.persisted) return;
+
+    window.location.reload();
+}
+
 pageTitle.innerText = `Room name: ${room}`;
 socket.on('message', renderMessage);
+socket.on('users', onUsers);
 socket.on('connect_error', onConnectError);
 form.addEventListener('submit', onSubmit);
+window.addEventListener('pageshow', onPageshow)

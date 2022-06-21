@@ -4,9 +4,10 @@ services:
     container_name: haproxy
     image: haproxy:1.8.30
     ports:
-      - '3000:3000'
+      - '80:80'
+      - '443:443'
     volumes:
-        - ./haproxy.dev.cfg:/usr/local/etc/haproxy/haproxy.cfg
+        - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
     restart: always
     depends_on:
       - server

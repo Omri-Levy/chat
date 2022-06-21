@@ -1,14 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Chat</title>
     <link rel="stylesheet" href="/index.css" type="text/css"/>
 </head>
 <body>
-<div class="container">
-    <header>
+<div class="container no-padding">
         <h1></h1>
-    </header>
+    <div class="users-container">
+    <h4>
+        Users in room
+    </h4>
+    <ul class="users"></ul>
+    </div>
 <ul id="messages"></ul>
 <form id="form" action="">
     <input id="input" autocomplete="off" name="message" placeholder="Message"/>
@@ -16,6 +24,6 @@
 </form>
 </div>
 <script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
-<script src="/script.js"></script>
+<script src="/chat.js"></script>
 </body>
 </html>
