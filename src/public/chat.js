@@ -11,6 +11,7 @@ const form = document.getElementById('form');
 const input = document.getElementById('input');
 const messages = document.getElementById('messages');
 const pageTitle = document.querySelector('h1');
+const errorEl = document.querySelector('.error');
 const socket = io(`http://${document.location.hostname}:80/chat`, {
     query: {
         username,
@@ -67,10 +68,16 @@ const onSubmit = (e) => {
 
     renderMessage(message);
 
-    socket.emit('message', message, (err) => {
-        if (!err) return;
+    socket.timeout(5000).emit('message', message, (res, err) => {
+        if (!err && !res) return;
 
-        alert(err);
+        let message = err ?? res?.message;
+
+        if (message === 'operation has timed out') {
+            message = 'Connection timed out...';
+        }
+
+        errorEl.textContent = message;
     });
     input.value = '';
 }
@@ -80,12 +87,15 @@ const onConnectError = (payload) => {
         return renderMessage(payload);
     }
 
-    if (payload.message === 'Validation Error') {
+    switch(payload.message) {
+        case 'xhr poll error':
+            return errorEl.textContent = 'Connection failed...';
+        case 'Validation Error':
             alert(payload.data.join('\n'));
 
             return window.location.href = `/`;
-    } else {
-        alert(payload.message);
+        default:
+            return errorEl.textContent = payload.message;
     }
 }
 

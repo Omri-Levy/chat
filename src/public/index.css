@@ -72,7 +72,6 @@ body {
 .container {
     padding: 1rem;
     max-width: 500px;
-    margin-top: 13vh;
     border: 2px solid rgba(0, 0, 0, 0.2);
     border-radius: 3px;
     display: grid;
@@ -142,4 +141,14 @@ label {
 
 .no-padding h1 {
     padding-left: 1rem;
+}
+
+.error {
+    font-size: 1.2rem;
+    margin-top: 13vh;
+    margin-bottom: 1rem;
+    margin-inline: auto;
+    max-width: 500px;
+    color: red;
+    font-weight: 900;
 }
