@@ -7,6 +7,8 @@ const DOMPurify = createDOMPurify(window);
 const Filter = require("bad-words");
 const marked = require("marked");
 const emoji = require("node-emoji");
+const styles = require("@dicebear/open-peeps");
+const {createAvatar} = require("@dicebear/avatars");
 
 const aliasEmoji = (str, ...args) => {
     let string = str;
@@ -31,6 +33,18 @@ const zParse = async (schema, payload) => {
 }
 
 class Io {
+
+    systemAvatar = createAvatar(styles, {
+        seed: `System`,
+        head: [`noHair3`],
+        face: [`old`],
+        accessories: [`glasses2`],
+        accessoriesProbability: 100,
+        facialHair: [`moustache9`],
+        facialHairProbability: 100,
+        skinColor: [`variant01`],
+        clothingColor: [`tail01`],
+    });
 
     constructor(io, storeClient, pubClient, subClient) {
         this.storeClient = storeClient;
@@ -150,16 +164,21 @@ class Io {
             if (user) {
                 socket.room = user.room;
                 socket.username = user.username;
+                socket.avatar = user.avatar;
 
                 return next();
             }
 
             socket.room = room;
             socket.username = username;
+            socket.avatar = createAvatar(styles, {
+                seed: username + room,
+            });
 
             const {error: saveUserError} = await this.storeClient.saveUser(socket.room, {
                 room: socket.room,
                 username: socket.username,
+                avatar: socket.avatar,
             });
 
             if (saveUserError) {
@@ -176,8 +195,9 @@ class Io {
         ]
     }
 
-    generateMessage({from, body}) {
+    generateMessage({avatar, from, body}) {
         return {
+            avatar,
             from,
             body,
             timestamp: new Date(),
@@ -188,6 +208,7 @@ class Io {
         return this.generateMessage({
             from: 'System',
             body,
+            avatar: this.systemAvatar,
         });
     }
 
@@ -228,6 +249,7 @@ class Io {
                 ...emojis,
             ).replace(/\n/g, '<br/>');
             const message = {
+                avatar: socket.avatar,
                 from: socket.username,
                 body,
                 timestamp: new Date(),

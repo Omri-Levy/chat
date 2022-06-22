@@ -19,7 +19,7 @@ const socket = io(`http://${document.location.hostname}:80/chat`, {
     },
 });
 
-const renderMessage = ({from, body, timestamp}) => {
+const renderMessage = ({avatar, from, body, timestamp}) => {
     const date = new Date(timestamp);
     const isToday = new Date().getDate() !== date.getDate();
     const formattedDate = date
@@ -40,10 +40,15 @@ const renderMessage = ({from, body, timestamp}) => {
         .replace(`,`, ` -`);
 
     const html = `
-        <li class="message-item">
-            <div class="message-container">
-                <strong>${from === username ? 'You' : from}:</strong>
-                <div class="flex mx-primary message">${body}</div>
+        <li class="message-item grid grid-cols-auto-1 border-b">
+                      <div class="avatar">
+            ${avatar}
+            </div>
+            <div class="flex">
+                <strong class="mt-2px">${from === username ? 'You' : from}:</strong>
+                <div class="flex mx-primary message">
+                   ${body}
+                </div>
             </div>
             <time class="inline-block mt-primary">${formattedDate}</time>
          </li>

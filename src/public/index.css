@@ -1,7 +1,7 @@
 :root {
     --min-h: 2.5rem;
     --screen-1: 960px;
-    --screen-2: 500px;
+    --screen-2: 600px;
     --h: 500px;
     --spacing-1: 1rem;
     --spacing-2: 0.5rem;
@@ -20,10 +20,12 @@
     --color-accent-primary: #ff1445;
     --color-accent-secondary: #16e205;
     --radius: 3px;
+    --radius-full: 100vh;
     --border-primary: 3px solid black;
     --border-secondary: 1px solid black;
     --drop-shadow-primary:  drop-shadow(4px 4px 0px black);
     --box-shadow-primary:  4px 4px 0px black;
+    --box-shadow-secondary:  2px 2px 0px black;
     --box-shadow-accent:  inset 4px 4px 0px var(--color-secondary), inset -4px -4px 0px var(--color-secondary);
     --underline-primary: underline 2px var(--color-accent-primary);
     --underline-offset-primary: 1px;
@@ -129,9 +131,12 @@ button {
 h1,
 h2,
 h3,
-button,
-strong {
+button {
     font-weight: 700;
+}
+
+strong {
+
 }
 
 h4,
@@ -205,24 +210,30 @@ body {
     margin-block: 0;
 }
 
+.avatar {
+    border-radius: var(--radius-full);
+    width: 3.5rem;
+    height: 3.5rem;
+    border: var(--border-primary);
+    box-shadow: var(--box-shadow-secondary);
+}
+
+.avatar > svg {
+    border-radius: var(--radius-full);
+}
+
 .messages {
     border-left: var(--border-secondary);
     padding-inline: var(--spacing-1);
 }
 
 .message-item {
-    border-bottom: var(--border-secondary);
     padding: var(--spacing-2);
     padding-left: 0;
 }
 
 .message-item:first-of-type {
     padding-top: 0;
-}
-
-
-.message-container {
-    display: flex;
 }
 
 .wrapper {
@@ -258,6 +269,14 @@ label {
 
 .mr-primary  {
     margin-right: var(--spacing-3);
+}
+
+.ml-primary  {
+    margin-left: var(--spacing-3);
+}
+
+.ml-4 {
+    margin-left: var(--spacing-1);
 }
 
 .inline-block {
@@ -393,4 +412,12 @@ header {
 
 .mr-4 {
     margin-right: var(--spacing-1);
+}
+
+.pl-4 {
+    padding-left: var(--spacing-1);
+}
+
+.mt-2px {
+    margin-top: 2px;
 }
