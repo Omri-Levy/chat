@@ -8,6 +8,16 @@ const Filter = require("bad-words");
 const marked = require("marked");
 const emoji = require("node-emoji");
 
+const aliasEmoji = (str, ...args) => {
+    let string = str;
+
+    args.forEach(([pattern, alias]) => {
+        string = string.replaceAll(pattern, `:${alias}:`);
+    })
+
+    return emoji.emojify(string);
+}
+
 const zParse = async (schema, payload) => {
         const {error, data} = await schema.safeParseAsync(payload);
 
@@ -71,7 +81,7 @@ class Io {
         }
 
         messages.forEach((message) => {
-            this.io.to(socket.room).emit(...this.emitMessage(message));
+            this.io.of('/chat').to(socket.room).emit(...this.emitMessage(message));
         });
 
         await this.onUsers(socket);
@@ -182,16 +192,44 @@ class Io {
     }
 
     onMessage(socket) {
-        return async function(body, cb) {
+        return async function(msg, cb) {
             const filter = new Filter();
-            const sanitized = DOMPurify.sanitize(body.trim());
-            const markdown = marked.parse(sanitized);
+            const sanitized = DOMPurify.sanitize(msg.trim());
+            const renderer = new marked.Renderer();
+            renderer.link = (href, title, text) => {
+                return `<a  href="${href}" title="${title}" target="_blank">${text}</a>`;
+            }
+            const markdown = marked.parse(sanitized, { renderer });
             const profanity = filter.clean(markdown);
-            const emojifi = emoji.emojify(profanity);
+            const emojis = [
+                [':)', 'smile'],
+                [':D', 'smile'],
+                [':(', 'frowning'],
+                ['D:', 'frowning'],
+                [';(', 'cry'],
+                ['D;', 'cry'],
+                [';)', 'wink'],
+                [':|', 'neutral_face'],
+                [':-)', 'grin'],
+                [':-(', 'disappointed'],
+                [':-|', 'expressionless'],
+                [':o', 'open_mouth'],
+                [':0', 'open_mouth'],
+                [':O', 'open_mouth'],
+                [':-o', 'open_mouth'],
+                [':-0', 'open_mouth'],
+                [':P', 'stuck_out_tongue'],
+                [':p', 'stuck_out_tongue'],
+                [':-P', 'stuck_out_tongue'],
+                [':-p', 'stuck_out_tongue'],
+            ];
+            const body = aliasEmoji(
+                profanity,
+                ...emojis,
+            ).replace(/\n/g, '<br/>');
             const message = {
                 from: socket.username,
-                body: emojifi
-                    .replace(/\n/g, '<br/>'),
+                body,
                 timestamp: new Date(),
             }
             const {error} = await this.storeClient.saveMessage(socket.room, message);
