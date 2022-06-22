@@ -7,8 +7,13 @@ const onAvailableRooms = (rooms) => {
 
     rooms.forEach(({room, subsCount}) => {
         const availableRoom = `
-                <li>
+                <li class="border-b py-primary flex items-center justify-between">
+                <div class="flex items-center">
+                    <h5 class="mt-primary mr-primary">
+                    Room:
+                    </h5>
                     <a href="/chat?room=${room}">${room}</a>
+                    </div>
                     <span>${subsCount} user(s) in room</span>
                 </li>
             `;

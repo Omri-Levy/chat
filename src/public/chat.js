@@ -7,10 +7,10 @@ history.replaceState(null, '', newPath);
 
 const room = searchParams.get('room') ?? 'General';
 const users = document.querySelector('.users');
-const form = document.getElementById('form');
-const input = document.getElementById('input');
-const messages = document.getElementById('messages');
-const pageTitle = document.querySelector('h1');
+const form = document.querySelector('form');
+const input = document.querySelector('textarea');
+const messages = document.querySelector('.messages');
+const pageTitle = document.querySelector('h2');
 const errorEl = document.querySelector('.error');
 const socket = io(`http://${document.location.hostname}:80/chat`, {
     query: {
@@ -40,12 +40,12 @@ const renderMessage = ({from, body, timestamp}) => {
         .replace(`,`, ` -`);
 
     const html = `
-        <li>
+        <li class="message-item">
             <div class="message-container">
                 <strong>${from === username ? 'You' : from}:</strong>
-                <div class="message">${body}</div>
+                <div class="flex mx-primary message">${body}</div>
             </div>
-            <time class="timestamp">${formattedDate}</time>
+            <time class="inline-block mt-primary">${formattedDate}</time>
          </li>
         `;
 
@@ -103,6 +103,7 @@ const onUsers = (usersArr) => {
     usersArr.forEach(({username}) => {
         const user = document.createElement('li');
 
+        user.classList.add('mb-primary');
         user.textContent = username;
         users.appendChild(user);
     })
