@@ -1,5 +1,5 @@
 :root {
-    --min-h: 3rem;
+    --min-h: 2.5rem;
     --screen-1: 960px;
     --screen-2: 500px;
     --h: 500px;
@@ -300,19 +300,26 @@ label {
     filter: var(--drop-shadow-primary);
 }
 
+.btn-primary {
+    height: var(--min-h);
+    min-width: 6rem;
+    font-size: var(--font-size-5);
+    border-radius: var(--radius);
+    border: var(--border-primary);
+    filter: var(--drop-shadow-primary);
+}
+
 .input-primary:focus,
 .btn-primary:focus {
     outline: none;
     box-shadow: var(--box-shadow-accent);
 }
 
-.btn-primary {
-    min-height: var(--min-h);
-    min-width: 6rem;
-    font-size: var(--font-size-5);
-    border-radius: var(--radius);
-    border: var(--border-primary);
-    filter: var(--drop-shadow-primary);
+.btn-primary:hover,
+.btn-primary:active {
+    transform-origin: center;
+    transform: scale(0.95);
+    transition: transform ease-out 75ms;
 }
 
 header {
