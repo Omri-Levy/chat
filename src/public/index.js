@@ -68,7 +68,15 @@ const onSubmit = (e) => {
     });
 }
 
+const onPageshow = (e) => {
+
+    if (!e.persisted) return;
+
+    window.location.reload();
+}
+
 socket.on('error', onError);
 socket.on('connect_error', onConnectError);
 socket.on('available-rooms', onAvailableRooms);
 form.addEventListener('submit', onSubmit);
+window.addEventListener('pageshow', onPageshow)

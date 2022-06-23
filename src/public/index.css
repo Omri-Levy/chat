@@ -300,6 +300,7 @@ label {
 }
 
 .error {
+    min-height: var(--font-size-5);
     font-size: var(--font-size-5);
     margin-top: 13vh;
     margin-bottom: var(--spacing-1);
