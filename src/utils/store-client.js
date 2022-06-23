@@ -8,17 +8,13 @@ class StoreClient {
             const messages = await this.redisStore
                 .lrange(`message:${room}`, 0, 10);
 
-            return {
-                messages: messages.map((message) => JSON.parse(message))
-            };
+            return [messages.map((message) => JSON.parse(message))];
         } catch {
-            return {
-                error: 'Something went wrong...',
-        }
+            return [undefined, new Error('Failed to find messages..')];
         }
     }
 
-    async saveMessage(room, message) {
+    async createMessage(room, message) {
         try {
             const messagesLen = await this.redisStore
                 .rpush(`message:${room}`, JSON.stringify(message))
@@ -27,15 +23,13 @@ class StoreClient {
                 this.redisStore.lpop(`message:${room}`);
             }
 
-            return {};
+            return [];
         } catch {
-            return {
-                error: 'Something went wrong...',
-            }
+            return [undefined, new Error('Failed to create message..')];
         }
     }
 
-    async saveUser(room, user) {
+    async createUser(room, user) {
        try {
            await this.redisStore
                .hset(
@@ -44,11 +38,9 @@ class StoreClient {
                    JSON.stringify(user)
                );
 
-           return {};
+           return [];
        } catch {
-           return {
-               error: 'Something went wrong...',
-           }
+           return [undefined, new Error('Failed to create user..')];
        }
 
     }
@@ -61,13 +53,9 @@ class StoreClient {
                );
            const values = Object.values(users);
 
-           return {
-               users: values.map((user) => JSON.parse(user))
-           };
+           return [values.map((user) => JSON.parse(user)), undefined];
        } catch {
-           return {
-               error: 'Something went wrong...',
-           }
+           return [undefined, new Error('Failed to find users..')];
        }
     }
 
@@ -79,11 +67,9 @@ class StoreClient {
                     name,
                 );
 
-            return {};
+            return [];
         } catch {
-            return {
-                error: `Could not delete user:${room} with name ${name}`
-            }
+            return [undefined, new Error(`Failed to delete user:${room} with name ${name}..`)]
         }
     }
 
@@ -95,30 +81,22 @@ class StoreClient {
                     id,
                 );
 
-            return {
-                user: JSON.parse(user),
-            };
+            return [JSON.parse(user)];
         } catch {
-            return {
-                error: 'Something went wrong...',
-            }
+            return [undefined, new Error(`Failed to find user:${room} with id ${id}..`)];
         }
     }
 
-    async saveRoom(room, subsCount) {
+    async createRoom(room, subsCount) {
         try {
-            if (!room) return;
-
             await this.redisStore.hset('rooms', room, JSON.stringify({
                 room,
                 subsCount,
             }));
 
-            return {};
+            return [];
         } catch {
-            return {
-                error: 'Something went wrong...',
-            }
+            return [undefined, new Error('Failed to create room..')];
         }
     }
 
@@ -127,13 +105,19 @@ class StoreClient {
             const rooms = await this.redisStore.hgetall('rooms');
             const values = Object.values(rooms);
 
-            return {
-                rooms: values.map((room) => JSON.parse(room)),
-            }
+            return [values.map((room) => JSON.parse(room))]
         } catch {
-            return {
-                error: 'Something went wrong...',
-            }
+            return [undefined, new Error('Failed to find rooms..')];
+        }
+    }
+
+    async findRoom(room) {
+        try {
+            const roomInfo = await this.redisStore.hget('rooms', room);
+
+            return [roomInfo ? JSON.parse(roomInfo) : undefined];
+        } catch {
+            return [undefined, new Error('Failed to find room..')];
         }
     }
 }

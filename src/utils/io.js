@@ -1,5 +1,4 @@
 const {createAdapter} = require("@socket.io/redis-adapter");
-const {z} = require("zod");
 const createDOMPurify = require('dompurify');
 const {JSDOM} = require("jsdom");
 const window = new JSDOM('').window;
@@ -9,6 +8,7 @@ const marked = require("marked");
 const emoji = require("node-emoji");
 const styles = require("@dicebear/open-peeps");
 const {createAvatar} = require("@dicebear/avatars");
+const {querySchema, roomSchema} = require("../validation");
 
 const aliasEmoji = (str, ...args) => {
     let string = str;
@@ -21,15 +21,10 @@ const aliasEmoji = (str, ...args) => {
 }
 
 const zParse = async (schema, payload) => {
-        const {error, data} = await schema.safeParseAsync(payload);
+        const {data, error} = await schema.safeParseAsync(payload);
+        const errors = error ? error.issues.map(({path, message}) => message) : undefined;
 
-        if (error) {
-            return {
-                errors: error.issues.map(({path, message}) => message)
-            }
-        }
-
-        return data;
+        return [data, errors];
 }
 
 class Io {
@@ -56,55 +51,133 @@ class Io {
         this.io.of('/chat').use(this.handleSession.bind(this));
         this.io.of('/chat').on('connection', this.onConnection.bind(this));
         this.io.on('connection', async (socket) => {
-                const {rooms, error} = await this.storeClient.findRooms();
+                const [rooms, error] = await this.storeClient.findRooms();
 
                 if (error) {
-                    return socket.emit('error', error);
+                    return socket.emit('error', {
+                        message: error.message,
+                    });
                 }
 
                 this.io.emit("available-rooms", rooms);
+
+                socket.on('create', this.onCreateRoom.bind(this));
         });
     }
 
+    async onCreateRoom(room, cb) {
+            const [, errors] = await zParse(roomSchema.schema, room);
+
+            if (errors) {
+
+                return cb({
+                    message: 'Validation Error',
+                    data: errors,
+                });
+            }
+
+            const [roomExists] = await this.storeClient.findRoom(room);
+
+            if (roomExists) {
+                return cb({
+                    message: roomSchema.alreadyExists(room),
+                });
+            }
+
+            const [,createRoomError] = await this.storeClient.createRoom(room, 0);
+
+            if (createRoomError) {
+                return cb({
+                    message: createRoomError.message,
+                });
+            }
+
+            const [rooms, findRoomsError] = await this.storeClient.findRooms();
+
+            if (findRoomsError) {
+                return cb({
+                    message: findRoomsError.message,
+                });
+            }
+
+            this.io.emit("available-rooms", rooms);
+
+            cb();
+    }
+
     async onUsers(socket) {
-        const {users, error} = await this.storeClient.findUsers(socket.room);
+        const [users, error] = await this.storeClient.findUsers(socket.room);
 
         if (error) {
-            return socket.emit('error', error);
+            return socket.emit('error', {
+                message: error.message,
+            });
         }
 
         this.io.of('/chat').to(socket.room).emit("users", users);
     }
 
-    async onConnection(socket) {
-        console.log('Client connected');
-
-        const joinedMessage = `${socket.username} joined the room!`;
-        const welcomeMessage = `Welcome to ${socket.room}, ${socket.username}!`;
-        const {messages, error} = await this.storeClient.findMessages(socket.room);
+    async sendMessagesHistory(socket) {
+        const [messages, error] = await this.storeClient.findMessages(socket.room);
 
         if (error) {
-            return socket.emit('error', error);
-        }
-
-        socket.join(socket.room);
-        const updateError = await this.updateSubsCount(socket.room);
-
-        if (updateError) {
-            return socket.emit('error', updateError);
+            return socket.emit('error', {
+                message: error.message,
+            });
         }
 
         messages.forEach((message) => {
             this.io.of('/chat').to(socket.room).emit(...this.emitMessage(message));
         });
+    }
 
-        await this.onUsers(socket);
-        socket.emit(
-            ...this.emitMessage(this.generateSystemMessage(welcomeMessage))
-        );
-        socket.to(socket.room).emit(
-            ...this.emitMessage(this.generateSystemMessage(joinedMessage))
-        );
+    async onJoinRoom(socket) {
+            const [roomExists, findRoomError] = await this.storeClient.findRoom(socket.room);
+
+            if (!roomExists) {
+                const err = new Error(roomSchema.doesNotExist(socket.room));
+
+                return socket.emit('error', {
+                    message: err.message,
+                });
+            }
+
+
+            if (findRoomError) {
+                return socket.emit('error', {
+                    message: findRoomError.message,
+                });
+            }
+
+            const joinedMessage = `${socket.username} joined the room!`;
+            const welcomeMessage = `Welcome to ${socket.room}, ${socket.username}!`;
+
+
+            socket.join(socket.room);
+            const [updateError] = await this.updateSubsCount(socket.room);
+
+            if (updateError) {
+                return socket.emit('error', {
+                    message: updateError.message,
+                });
+            }
+
+            await this.onUsers(socket);
+
+            await this.sendMessagesHistory(socket);
+
+            socket.emit(
+                ...this.emitMessage(this.generateSystemMessage(welcomeMessage))
+            );
+            socket.to(socket.room).emit(
+                ...this.emitMessage(this.generateSystemMessage(joinedMessage))
+            );
+    }
+
+    async onConnection(socket) {
+        console.log('Client connected');
+
+        await this.onJoinRoom(socket);
         socket.on('message', this.onMessage(socket).bind(this));
         socket.on('disconnect', this.onDisconnect(socket).bind(this));
     };
@@ -118,34 +191,8 @@ class Io {
             room: DOMPurify.sanitize(socket.handshake.query.room).trim(),
             username: DOMPurify.sanitize(socket.handshake.query.username).trim(),
         }
-        const querySchema = z.object({
-            room: z.string({
-                required_error: "Room is required",
-                invalid_type_error: "Room must be a string",
-            }).min(
-                1,
-            `Room must contain at least 1 character(s)`
-                )
-                .max(
-                    320,
-                    `Room must contain at most 320 character(s)`
-                ),
-            username: z.string({
-                required_error: "Username is required",
-                invalid_type_error: "Username must be a string",
-            })
-                .min(
-                    1,
-                    `Username must contain at least 1 character(s)`
-                )
-                .max(
-                    70,
-                    `Username must contain at most 70 character(s)`
-                ),
-        });
 
-
-            const {errors, room, username} = await zParse(querySchema, sanitized);
+            const [{room, username}, errors] = await zParse(querySchema, sanitized);
 
             if (errors) {
                 const err = new Error('Validation Error')
@@ -155,10 +202,10 @@ class Io {
                 return next(err);
             }
 
-            const {user, error: findUserError} = await this.storeClient.findUser(room, username);
+            const [user, findUserError] = await this.storeClient.findUser(room, username);
 
             if (findUserError) {
-                return next(new Error(findUserError));
+                return next(findUserError);
             }
 
             if (user) {
@@ -175,14 +222,14 @@ class Io {
                 seed: username + room,
             });
 
-            const {error: saveUserError} = await this.storeClient.saveUser(socket.room, {
+            const [, createUserError] = await this.storeClient.createUser(socket.room, {
                 room: socket.room,
                 username: socket.username,
                 avatar: socket.avatar,
             });
 
-            if (saveUserError) {
-                return next(new Error(saveUserError));
+            if (createUserError) {
+                return next(createUserError);
             }
 
             next();
@@ -254,10 +301,12 @@ class Io {
                 body,
                 timestamp: new Date(),
             }
-            const {error} = await this.storeClient.saveMessage(socket.room, message);
+            const [,error] = await this.storeClient.createMessage(socket.room, message);
 
             if (error) {
-                return cb(error);
+                return cb({
+                    message: error.message,
+                });
             }
 
             this.io
@@ -271,6 +320,12 @@ class Io {
 
     onDisconnect(socket) {
         return async function() {
+            const [roomExists] = await this.storeClient.findRoom(socket.room);
+
+            if (!roomExists) {
+                return;
+            }
+
             console.log('Client disconnected');
 
             const leftMessage = `${socket.username} left the room!`
@@ -279,7 +334,7 @@ class Io {
                 .of('/chat')
                 .to(socket.room)
                 .emit(...this.emitMessage(this.generateSystemMessage(leftMessage)));
-            const {error} = await this.storeClient.deleteUser(socket.room, socket.username);
+            const [,error] = await this.storeClient.deleteUser(socket.room, socket.username);
 
             if (error) {
                 console.error(error);
@@ -288,7 +343,7 @@ class Io {
             }
 
             this.onUsers(socket);
-            const updateError = await this.updateSubsCount(socket.room);
+            const [updateError] = await this.updateSubsCount(socket.room);
 
             if (updateError) {
                 console.error(error);
@@ -298,15 +353,17 @@ class Io {
 
     async updateSubsCount(room) {
             const subsCount = this.getSubsCount(room);
-            const {error: saveRoomError} = await this.storeClient.saveRoom(room, subsCount);
-            const {rooms, error: findRoomsError} = await this.storeClient.findRooms();
-            const error = saveRoomError || findRoomsError;
+            const [, createRoomError] = await this.storeClient.createRoom(room, subsCount);
+            const [rooms, findRoomsError] = await this.storeClient.findRooms();
+            const error = createRoomError || findRoomsError;
 
             if (error) {
-                return error;
+                return [undefined, error];
             }
 
             this.io.emit("available-rooms", rooms);
+
+            return [];
     }
 }
 

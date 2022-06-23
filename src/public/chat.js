@@ -20,6 +20,7 @@ const socket = io(`http://${document.location.hostname}:80/chat`, {
 });
 
 const renderMessage = ({avatar, from, body, timestamp}) => {
+
     const date = new Date(timestamp);
     const isToday = new Date().getDate() !== date.getDate();
     const formattedDate = date
@@ -59,16 +60,18 @@ const renderMessage = ({avatar, from, body, timestamp}) => {
 };
 
 const onSubmit = (e) => {
+
     e.preventDefault();
 
     const body = input.value;
 
     if (!body) return;
 
+    errorEl.textContent = '';
     socket.timeout(5000).emit('message', body, (res, err) => {
-        if (!err && !res) return;
+        if (!res?.message && !err?.message) return;
 
-        let message = err ?? res?.message;
+        let message = err?.message ?? res?.message;
 
         if (message === 'operation has timed out') {
             message = 'Connection timed out...';
@@ -79,30 +82,39 @@ const onSubmit = (e) => {
     input.value = '';
 }
 
-const onConnectError = (payload) => {
-    if (!(payload instanceof Error)) {
-        return renderMessage(payload);
-    }
+const onConnectError = ({message = `Something went wrong..`, data}) => {
 
-    switch(payload.message) {
-        case 'xhr poll error':
-            return errorEl.textContent = 'Connection failed...';
-        case 'Validation Error':
-            alert(payload.data.join('\n'));
+        errorEl.textContent = '';
 
-            return window.location.href = `/`;
-        default:
-            return errorEl.textContent = payload.message;
-    }
+        switch(message) {
+            case 'xhr poll error':
+                return errorEl.textContent = 'Failed to connect..';
+            case 'Validation Error':
+                alert(data.join('\n'));
+
+                window.location.href = `/`;
+                return;
+            default:
+                errorEl.textContent = message;
+                return;
+        }
 }
 
-const onError = (error) => {
-    if (!error) return;
+const onError = ({message}) => {
 
-    alert(error);
+    if (!message) return;
+
+    if (message === `Room "${room}" does not exist`) {
+        alert(message);
+
+        return window.location.href = `/`;
+    }
+
+    errorEl.textContent = message;
 }
 
 const onUsers = (usersArr) => {
+
     users.innerHTML = ``;
 
     usersArr.forEach(({username}) => {
@@ -115,12 +127,18 @@ const onUsers = (usersArr) => {
 }
 
 const onPageshow = (e) => {
+
     if (!e.persisted) return;
 
     window.location.reload();
 }
 
-pageTitle.innerText = `Room name: ${room}`;
+const onConnect = () => {
+    errorEl.textContent = '';
+}
+
+pageTitle.textContent = `Room name: ${room}`;
+socket.on('connect', onConnect);
 socket.on('message', renderMessage);
 socket.on('users', onUsers);
 socket.on('connect_error', onConnectError);
