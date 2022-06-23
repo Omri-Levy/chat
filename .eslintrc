@@ -1,0 +1,15 @@
+{
+  "plugins": ["prettier"],
+  "parserOptions": {
+	"ecmaVersion": 2022
+  },
+  "env": {
+	"es6": true,
+	"node": true,
+	"browser": true
+  },
+  "rules": {
+    "prettier/prettier": "error",
+    "quotes": ["error", "backtick"]
+  }
+}

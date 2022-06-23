@@ -1,42 +1,57 @@
 <!DOCTYPE html>
 <html class="scroller">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Chat</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inria+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/index.css" type="text/css"/>
-</head>
-<header>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inria+Sans:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/index.css" type="text/css" />
+  </head>
+  <header>
     <h1 class="inline-block color-white bg-black">Chat</h1>
-</header>
-<body>
-<div class="error"></div>
-<div class="box">
-    <h2></h2>
-<div class="wrapper outline-primary grid grid-cols-auto-1">
-    <div>
-    <h5 class="mb-primary mr-4">
-        Users in room
-    </h5>
-    <ul class="users h-500 scroller pr-4"></ul>
-    </div>
-<ul class="messages h-500 scroller mb-2"></ul>
-<form action="" class="flex col-span-full">
-    <textarea
+  </header>
+  <body>
+    <div class="error"></div>
+    <div class="box">
+      <div class="flex justify-between">
+        <h2></h2>
+        <a href="/" class="mr-2">Back to lobby</a>
+      </div>
+      <div class="wrapper outline-primary grid grid-cols-auto-1">
+        <div>
+          <h5 class="mb-primary mr-4">Users in room</h5>
+          <ul class="users h-500 scroller pr-4"></ul>
+        </div>
+        <ul class="messages h-500 scroller mb-2"></ul>
+        <form action="" class="flex col-span-full">
+          <textarea
             rows="1"
             class="input-primary resize-none scroller mr-2 grow"
-            autocomplete="off" name="message" placeholder="Message"></textarea>
-    <button type="submit" class="btn-primary bg-accent-secondary ">Send</button>
-</form>
-</div>
-</div>
-<script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="/chat.js"></script>
-</body>
+            autocomplete="off"
+            name="message"
+            placeholder="Message"
+          ></textarea>
+          <button type="submit" class="btn-primary bg-accent-secondary">
+            Send
+          </button>
+        </form>
+      </div>
+    </div>
+    <script
+      src="https://cdn.socket.io/4.5.0/socket.io.min.js"
+      integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script type="module" src="/chat.js"></script>
+  </body>
 </html>
