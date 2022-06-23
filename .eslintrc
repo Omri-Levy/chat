@@ -10,6 +10,7 @@
   },
   "rules": {
     "prettier/prettier": "error",
-    "quotes": ["error", "backtick"]
+    "quotes": ["error", "backtick"],
+	"prefer-template": "error"
   }
 }
