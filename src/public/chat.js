@@ -52,7 +52,7 @@ const renderMessage = ({ avatar, from, body, timestamp }) => {
 
 	const html = `
         <li class="message-item grid grid-cols-auto-1 border-b">
-                      <div class="avatar">
+                      <div class="avatar mr-2">
             ${avatar}
             </div>
             <div class="flex">
@@ -63,7 +63,7 @@ const renderMessage = ({ avatar, from, body, timestamp }) => {
                    ${body}
                 </div>
             </div>
-            <time class="inline-block mt-primary">${formattedDate}</time>
+            <time class="col-span-full mt-primary">${formattedDate}</time>
          </li>
         `;
 

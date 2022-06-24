@@ -13,7 +13,7 @@ const onAvailableRooms = (rooms) => {
                     <h5 class="mt-primary mr-primary">
                     Room:
                     </h5>
-                    <a href="/chat?room=${room}">${room}</a>
+                    <a class="room-link" href="/chat?room=${room}">${room}</a>
                     </div>
                     <span>${subsCount} user(s) in room</span>
                 </li>

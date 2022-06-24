@@ -207,7 +207,7 @@ class Io {
 		};
 		// In case someone will try and modify the localStorage entry.
 		const sessionId = DOMPurify.sanitize(socket.handshake.auth.sessionId);
-		const [{ room, username }, errors] = await zParse(
+		const [{ room, username } = {}, errors] = await zParse(
 			authSchema,
 			sanitized
 		);
