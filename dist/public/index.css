@@ -27,7 +27,7 @@
 	--box-shadow-primary: 4px 4px 0px black;
 	--box-shadow-secondary: 2px 2px 0px black;
 	--box-shadow-accent: inset 4px 4px 0px var(--color-secondary),
-	inset -4px -4px 0px var(--color-secondary);
+		inset -4px -4px 0px var(--color-secondary);
 	--underline-primary: underline 2px var(--color-accent-primary);
 	--underline-offset-primary: 1px;
 }
@@ -463,7 +463,7 @@ header {
 	overflow: hidden;
 	display: inline-block;
 	vertical-align: bottom;
-	content: "\2026";
+	content: '\2026';
 	width: 0px;
 	animation: typing steps(10, end) 1s infinite;
 }

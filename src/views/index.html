@@ -1,56 +1,56 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<meta charset="UTF-8"/>
-	<meta
+	<head>
+		<meta charset="UTF-8" />
+		<meta
 			content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
 			name="viewport"
-	/>
-	<meta content="ie=edge" http-equiv="X-UA-Compatible"/>
-	<title>Chat</title>
-	<link href="https://fonts.googleapis.com" rel="preconnect"/>
-	<link crossorigin href="https://fonts.gstatic.com" rel="preconnect"/>
-	<link
+		/>
+		<meta content="ie=edge" http-equiv="X-UA-Compatible" />
+		<title>Chat</title>
+		<link href="https://fonts.googleapis.com" rel="preconnect" />
+		<link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
+		<link
 			href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inria+Sans:wght@400;700&display=swap"
 			rel="stylesheet"
-	/>
-	<link href="/index.css" rel="stylesheet" type="text/css"/>
-</head>
-<header>
-	<h1 class="inline-block color-white bg-black">Lobby</h1>
-</header>
-<body>
-<div class="container">
-	<div class="error"></div>
-	<div class="wrapper outline-primary mb-4">
-		<form action="/chat" class="lobby-form">
-			<label for="room-name">Room Name:</label>
-			<div class="flex">
-				<input
-						class="input-primary mr-2 grow"
-						dir="auto"
-						id="room-name"
-						name="room"
-						placeholder="Type here..."
-				/>
-				<button class="btn-primary bg-secondary" type="submit">
-					Create
-				</button>
+		/>
+		<link href="/index.css" rel="stylesheet" type="text/css" />
+	</head>
+	<header>
+		<h1 class="inline-block color-white bg-black">Lobby</h1>
+	</header>
+	<body>
+		<div class="container">
+			<div class="error"></div>
+			<div class="wrapper outline-primary mb-4">
+				<form action="/chat" class="lobby-form">
+					<label for="room-name">Room Name:</label>
+					<div class="flex">
+						<input
+							class="input-primary mr-2 grow"
+							dir="auto"
+							id="room-name"
+							name="room"
+							placeholder="Type here..."
+						/>
+						<button class="btn-primary bg-secondary" type="submit">
+							Create
+						</button>
+					</div>
+				</form>
 			</div>
-		</form>
-	</div>
-	<div class="box">
-		<h2>Available Rooms</h2>
-		<ul
-				class="scroller available-rooms h-500 scroller wrapper outline-primary"
-		></ul>
-	</div>
-</div>
-<script
-		crossorigin="anonymous"
-		integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
-		src="https://cdn.socket.io/4.5.0/socket.io.min.js"
-></script>
-<script src="/index.js"></script>
-</body>
+			<div class="box">
+				<h2>Available Rooms</h2>
+				<ul
+					class="scroller available-rooms h-500 scroller wrapper outline-primary"
+				></ul>
+			</div>
+		</div>
+		<script
+			crossorigin="anonymous"
+			integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
+			src="https://cdn.socket.io/4.5.0/socket.io.min.js"
+		></script>
+		<script src="/index.js"></script>
+	</body>
 </html>

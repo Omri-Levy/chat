@@ -9,8 +9,8 @@
 	"build": "npm run clean && tsc",
 	"watch": "tsc -w",
 	"postinstall": "husky install",
-	"format": "prettier --write \\\"src/**/*.ts src/public/**.{js,html,css}\\\"",
-	"lint": "eslint \\\"src/**/*.ts src/public/**/*.js\\\" --fix",
+	"format": "prettier --write \"src/**/*.{js,ts,css,html}\"",
+	"lint": "eslint \"src/**/*.{js,ts}\" --fix",
 	"cm": "git add . && git-cz",
 	"dev": "concurrently \"npm run watch\" \"nodemon\"",
 	"start": "node src/index.js"
