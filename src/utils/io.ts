@@ -1,22 +1,42 @@
-const { createAdapter } = require(`@socket.io/redis-adapter`);
-const createDOMPurify = require(`dompurify`);
-const { JSDOM } = require(`jsdom`);
-const window = new JSDOM(``).window;
-const DOMPurify = createDOMPurify(window);
-const Filter = require(`bad-words`);
-const marked = require(`marked`);
-const styles = require(`@dicebear/open-peeps`);
-const { createAvatar } = require(`@dicebear/avatars`);
-const {
-	authSchema,
-	roomSchema,
-	usernameSchema,
-} = require(`../validation/schemas`);
-const { zParse } = require(`../validation/z-parse`);
-const { aliasEmoji } = require(`./alias-emoji`);
-const { v4 } = require(`uuid`);
+import { createAdapter } from '@socket.io/redis-adapter';
+import createDOMPurify from 'dompurify';
+import { IUser, StoreClient } from './store-client';
+import { JSDOM } from 'jsdom';
+import Filter from 'bad-words';
+import { marked, Renderer } from 'marked';
+import * as styles from '@dicebear/open-peeps';
+import { createAvatar } from '@dicebear/avatars';
+import { authSchema, roomSchema, usernameSchema } from '../validation/schemas';
+import { zParse } from '../validation/z-parse';
+import { aliasEmoji } from './alias-emoji';
+import { v4 } from 'uuid';
+import { Server, Socket } from 'socket.io';
+import { Redis } from 'ioredis';
+import { ExtendedError } from 'socket.io/dist/namespace';
 
-class Io {
+const window = new JSDOM(``).window;
+const DOMPurify = createDOMPurify(window as any);
+
+export type Next = (err?: ExtendedError | undefined) => void;
+
+export type Cb = ({
+	message,
+	data,
+}?: {
+	message: string;
+	data?: Array<string>;
+}) => void;
+
+export interface IMessage {
+	from: string;
+	avatar: string;
+	body: string;
+	timestamp: Date;
+}
+
+export type SocketWithUser = Socket & { user: IUser };
+
+export class Io {
 	systemAvatar = createAvatar(styles, {
 		seed: `System`,
 		head: [`noHair3`],
@@ -29,16 +49,27 @@ class Io {
 		clothingColor: [`tail01`],
 	});
 
-	constructor(io, storeClient, pubClient, subClient) {
-		this.storeClient = storeClient;
-		this.io = io;
+	constructor(
+		private io: Server,
+		private storeClient: StoreClient,
+		private pubClient: Redis,
+		private subClient: Redis
+	) {
 		this.io.adapter(createAdapter(pubClient, subClient));
-		this.io.of(`/chat`).use(this.handleSession.bind(this));
-		this.io.of(`/chat`).on(`connection`, this.onConnection.bind(this));
+		this.io
+			.of(`/chat`)
+			.use((socket, next) =>
+				this.handleSession(socket as SocketWithUser, next)
+			);
+		this.io
+			.of(`/chat`)
+			.on(`connection`, (socket) =>
+				this.onConnection(socket as SocketWithUser)
+			);
 		this.io.on(`connection`, async (socket) => {
 			const [rooms, error] = await this.storeClient.findRooms();
 
-			if (rooms.length === 0) {
+			if (rooms?.length === 0) {
 				const [, findRoomsError] = await this.storeClient.createRoom(
 					`General`,
 					0
@@ -63,7 +94,7 @@ class Io {
 		});
 	}
 
-	async onCreateRoom(room, cb) {
+	async onCreateRoom(room: string, cb: Cb) {
 		const cleanRoom = room.trim();
 		const [, errors] = await zParse(roomSchema.schema, cleanRoom);
 
@@ -106,12 +137,12 @@ class Io {
 		cb();
 	}
 
-	async onUsers(socket) {
+	async onUsers(socket: SocketWithUser) {
 		const [users, error] = await this.storeClient.findUsers(
 			socket.user.room
 		);
 
-		if (error) {
+		if (error instanceof Error) {
 			return socket.emit(`error`, {
 				message: error.message,
 			});
@@ -120,18 +151,18 @@ class Io {
 		this.io.of(`/chat`).to(socket.user.room).emit(`users`, users);
 	}
 
-	async sendMessagesHistory(socket) {
+	async sendMessagesHistory(socket: SocketWithUser) {
 		const [messages, error] = await this.storeClient.findMessages(
 			socket.user.room
 		);
 
-		if (error) {
+		if (error instanceof Error) {
 			return socket.emit(`error`, {
 				message: error.message,
 			});
 		}
 
-		messages.forEach((message) => {
+		messages?.forEach((message) => {
 			this.io
 				.of(`/chat`)
 				.to(socket.user.room)
@@ -139,7 +170,7 @@ class Io {
 		});
 	}
 
-	async onJoinRoom(socket) {
+	async onJoinRoom(socket: SocketWithUser) {
 		const [roomExists, findRoomError] = await this.storeClient.findRoom(
 			socket.user.room
 		);
@@ -184,7 +215,7 @@ class Io {
 			);
 	}
 
-	async onConnection(socket) {
+	async onConnection(socket: SocketWithUser) {
 		console.log(`Client connected`);
 
 		socket.emit(`session`, {
@@ -193,27 +224,47 @@ class Io {
 
 		await this.onJoinRoom(socket);
 		socket.on(`message`, this.onMessage(socket).bind(this));
+		socket.on(`start-typing`, this.onStartTyping(socket).bind(this));
+		socket.on(`stop-typing`, this.onStopTyping(socket).bind(this));
 		socket.on(`disconnect`, this.onDisconnect(socket).bind(this));
 	}
 
-	getSubsCount(room) {
+	getSubsCount(room: string) {
 		return this.io.of(`/chat`).adapter.rooms.get(room)?.size ?? 0;
 	}
 
-	async handleSession(socket, next) {
+	onStartTyping(socket: SocketWithUser) {
+		return function () {
+			socket.to(socket.user.room).emit(`start-typing`, {
+				username: socket.user.username,
+			});
+		};
+	}
+
+	onStopTyping(socket: SocketWithUser) {
+		return function () {
+			socket.to(socket.user.room).emit(`stop-typing`, {
+				username: socket.user.username,
+			});
+		};
+	}
+
+	async handleSession(socket: SocketWithUser, next: Next) {
 		const sanitized = {
 			room: DOMPurify.sanitize(socket.handshake.auth.room).trim(),
 			username: DOMPurify.sanitize(socket.handshake.auth.username).trim(),
 		};
 		// In case someone will try and modify the localStorage entry.
 		const sessionId = DOMPurify.sanitize(socket.handshake.auth.sessionId);
-		const [{ room, username } = {}, errors] = await zParse(
+		const [{ room, username }, errors] = await zParse(
 			authSchema,
 			sanitized
 		);
 
 		if (errors) {
-			const err = new Error(`Validation Error`);
+			const err = new Error(`Validation Error`) as Error & {
+				data: Array<string>;
+			};
 
 			err.data = errors;
 
@@ -267,11 +318,11 @@ class Io {
 		next();
 	}
 
-	emitMessage(message) {
+	emitMessage(message: IMessage): [`message`, IMessage] {
 		return [`message`, message];
 	}
 
-	generateMessage({ avatar, from, body }) {
+	generateMessage({ avatar, from, body }: Omit<IMessage, `timestamp`>) {
 		return {
 			avatar,
 			from,
@@ -280,23 +331,23 @@ class Io {
 		};
 	}
 
-	generateSystemMessage(body) {
+	generateSystemMessage(body: string) {
 		return this.generateMessage({
+			avatar: this.systemAvatar,
 			from: `System`,
 			body,
-			avatar: this.systemAvatar,
 		});
 	}
 
-	onMessage(socket) {
-		return async function (msg, cb) {
+	onMessage(socket: SocketWithUser) {
+		return async (msg: string, cb: Cb) => {
 			const filter = new Filter();
 			const sanitized = DOMPurify.sanitize(msg.trim());
-			const renderer = new marked.Renderer();
+			const renderer = new Renderer();
 			renderer.link = (href, title, text) => {
 				return `<a  href="${href}" title="${title}" target="_blank">${text}</a>`;
 			};
-			const markdown = marked.parse(sanitized, { renderer });
+			const markdown = marked(sanitized, { renderer });
 			const profanity = filter.clean(markdown);
 			const emojis = [
 				[`:)`, `smile`],
@@ -324,7 +375,7 @@ class Io {
 				/\n/g,
 				`<br/>`
 			);
-			const message = {
+			const message: IMessage = {
 				avatar: socket.user.avatar,
 				from: socket.user.username,
 				body,
@@ -350,8 +401,8 @@ class Io {
 		};
 	}
 
-	onDisconnect(socket) {
-		return async function () {
+	onDisconnect(socket: SocketWithUser) {
+		return async () => {
 			const [roomExists] = await this.storeClient.findRoom(
 				socket.user.room
 			);
@@ -390,7 +441,7 @@ class Io {
 		};
 	}
 
-	async updateSubsCount(room) {
+	async updateSubsCount(room: string) {
 		const subsCount = this.getSubsCount(room);
 		const [, createRoomError] = await this.storeClient.createRoom(
 			room,
@@ -408,7 +459,3 @@ class Io {
 		return [];
 	}
 }
-
-module.exports = {
-	Io,
-};

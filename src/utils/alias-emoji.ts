@@ -1,6 +1,6 @@
-const emoji = require(`node-emoji`);
+import emoji from 'node-emoji';
 
-const aliasEmoji = (str, ...args) => {
+export const aliasEmoji = (str: string, ...args: any[]) => {
 	let string = str;
 
 	args.forEach(([pattern, alias]) => {
@@ -8,8 +8,4 @@ const aliasEmoji = (str, ...args) => {
 	});
 
 	return emoji.emojify(string);
-};
-
-module.exports = {
-	aliasEmoji,
 };

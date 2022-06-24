@@ -8,6 +8,7 @@ COPY ../.env ./
 
 RUN npm ci
 
+COPY ../shell-js.mjs ./
 COPY ../src ./src
 
 EXPOSE 80

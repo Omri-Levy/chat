@@ -1,23 +1,33 @@
-class StoreClient {
-	constructor(redisClient) {
-		this.redisStore = redisClient;
-	}
+import { Redis } from 'ioredis';
+import { IMessage } from './io';
 
-	async findMessages(room) {
+export interface IUser {
+	username: string;
+	room: string;
+	sessionId: string;
+	avatar: string;
+}
+
+export class StoreClient {
+	constructor(private redisStore: Redis) {}
+
+	async findMessages(
+		room: string
+	): Promise<[Array<IMessage> | undefined, Error | undefined]> {
 		try {
-			const messages = await this.redisStore.lrange(
+			const messages = (await this.redisStore.lrange(
 				`message:${room}`,
 				0,
 				10
-			);
+			)) as Array<string>;
 
-			return [messages.map((message) => JSON.parse(message))];
+			return [messages.map((message) => JSON.parse(message)), undefined];
 		} catch {
 			return [undefined, new Error(`Failed to find messages..`)];
 		}
 	}
 
-	async createMessage(room, message) {
+	async createMessage(room: string, message: IMessage) {
 		try {
 			const messagesLen = await this.redisStore.rpush(
 				`message:${room}`,
@@ -34,7 +44,7 @@ class StoreClient {
 		}
 	}
 
-	async createUser(room, user) {
+	async createUser(room: string, user: IUser) {
 		try {
 			await this.redisStore.hset(
 				`user:${room}`,
@@ -48,7 +58,7 @@ class StoreClient {
 		}
 	}
 
-	async findUsers(room) {
+	async findUsers(room: string) {
 		try {
 			const users = await this.redisStore.hgetall(`user:${room}`);
 			const values = Object.values(users);
@@ -59,7 +69,7 @@ class StoreClient {
 		}
 	}
 
-	async deleteUser(room, username) {
+	async deleteUser(room: string, username: string) {
 		try {
 			await this.redisStore.hdel(`user:${room}`, username);
 
@@ -74,7 +84,7 @@ class StoreClient {
 		}
 	}
 
-	async findUser(room, username) {
+	async findUser(room: string, username: string) {
 		try {
 			const user = await this.redisStore.hget(`user:${room}`, username);
 
@@ -89,7 +99,7 @@ class StoreClient {
 		}
 	}
 
-	async createRoom(room, subsCount) {
+	async createRoom(room: string, subsCount: number) {
 		try {
 			await this.redisStore.hset(
 				`rooms`,
@@ -106,18 +116,18 @@ class StoreClient {
 		}
 	}
 
-	async findRooms() {
+	async findRooms(): Promise<[string[] | undefined, Error | undefined]> {
 		try {
 			const rooms = await this.redisStore.hgetall(`rooms`);
 			const values = Object.values(rooms);
 
-			return [values.map((room) => JSON.parse(room))];
+			return [values.map((room) => JSON.parse(room)), undefined];
 		} catch {
 			return [undefined, new Error(`Failed to find rooms..`)];
 		}
 	}
 
-	async findRoom(room) {
+	async findRoom(room: string) {
 		try {
 			const roomInfo = await this.redisStore.hget(`rooms`, room);
 
@@ -127,7 +137,3 @@ class StoreClient {
 		}
 	}
 }
-
-module.exports = {
-	StoreClient,
-};

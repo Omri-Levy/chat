@@ -4,11 +4,12 @@ ENV NODE_ENV development
 WORKDIR /app
 
 COPY ../package*.json ./
-COPY ../.env ./
 
 RUN npm ci
 
-COPY ../src ./src
+COPY ../ ./
+
+RUN npm run build
 
 EXPOSE 80
 

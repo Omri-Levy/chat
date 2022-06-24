@@ -1,16 +1,17 @@
 {
-  "plugins": ["prettier"],
-  "parserOptions": {
-	"ecmaVersion": 2022
-  },
-  "env": {
-	"es6": true,
-	"node": true,
-	"browser": true
-  },
+  "plugins": [
+	"@typescript-eslint/eslint-plugin",
+	"prettier"
+  ],
+  "extends": [
+	"plugin:@typescript-eslint/recommended"
+  ],
   "rules": {
-    "prettier/prettier": "error",
-    "quotes": ["error", "backtick"],
+	"prettier/prettier": "error",
+	"quotes": [
+	  "error",
+	  "backtick"
+	],
 	"prefer-template": "error"
   }
 }
