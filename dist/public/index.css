@@ -27,7 +27,7 @@
 	--box-shadow-primary: 4px 4px 0px black;
 	--box-shadow-secondary: 2px 2px 0px black;
 	--box-shadow-accent: inset 4px 4px 0px var(--color-secondary),
-		inset -4px -4px 0px var(--color-secondary);
+	inset -4px -4px 0px var(--color-secondary);
 	--underline-primary: underline 2px var(--color-accent-primary);
 	--underline-offset-primary: 1px;
 }
@@ -300,7 +300,7 @@ label {
 }
 
 .error {
-	min-height: var(--font-size-5);
+	min-height: 3rem;
 	font-size: var(--font-size-5);
 	margin-top: 8vh;
 	margin-bottom: var(--spacing-1);
@@ -470,4 +470,8 @@ header {
 
 .username {
 	min-width: 9ch;
+}
+
+.link-404 {
+	font-size: var(--font-size-2);
 }

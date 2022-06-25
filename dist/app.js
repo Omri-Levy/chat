@@ -14,3 +14,6 @@ exports.app.get(`/`, (req, res) => {
 exports.app.get(`/chat`, async (req, res) => {
     res.sendFile(path_1.default.join(__dirname, `/views/chat.html`));
 });
+exports.app.all(`*`, async (req, res) => {
+    res.sendFile(path_1.default.join(__dirname, `/views/404.html`));
+});

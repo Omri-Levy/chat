@@ -48,6 +48,10 @@ export class Io {
 		skinColor: [`variant01`],
 		clothingColor: [`tail01`],
 	});
+	throttle: {
+		[ip: string]: { count: number; timeout: NodeJS.Timeout | null };
+	} = {};
+	THROTTLE_TIMEOUT = 3;
 
 	constructor(
 		private io: Server,
@@ -339,8 +343,39 @@ export class Io {
 		});
 	}
 
+	shouldThrottle(socket: SocketWithUser) {
+		if (!this.throttle[socket.handshake.address]) {
+			this.throttle[socket.handshake.address] = {
+				count: 0,
+				timeout: null,
+			};
+		}
+
+		if (this.throttle[socket.handshake.address].count >= 3) {
+			clearTimeout(this.throttle[socket.handshake.address].timeout!);
+
+			this.throttle[socket.handshake.address].timeout = setTimeout(() => {
+				this.throttle[socket.handshake.address].count = 0;
+			}, this.THROTTLE_TIMEOUT * 1000);
+
+			return true;
+		}
+
+		this.throttle[socket.handshake.address].count++;
+
+		return false;
+	}
+
 	onMessage(socket: SocketWithUser) {
 		return async (msg: string, cb: Cb) => {
+			const shouldThrottle = this.shouldThrottle(socket);
+
+			if (shouldThrottle) {
+				return cb({
+					message: `You are sending messages too fast! Try again in ${this.THROTTLE_TIMEOUT} second(s).`,
+				});
+			}
+
 			const filter = new Filter();
 			const sanitized = DOMPurify.sanitize(msg.trim());
 			const renderer = new Renderer();

@@ -81,8 +81,9 @@ const onSubmit = (e) => {
 
 	if (!body) return;
 
-	errorEl.textContent = ``;
 	socket.timeout(5000).emit(`message`, body, (res, err) => {
+		errorEl.textContent = ``;
+
 		if (!res?.message && !err?.message) return;
 
 		let message = err?.message ?? res?.message;

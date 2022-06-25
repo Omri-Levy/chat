@@ -12,3 +12,7 @@ app.get(`/`, (req, res) => {
 app.get(`/chat`, async (req, res) => {
 	res.sendFile(path.join(__dirname, `/views/chat.html`));
 });
+
+app.all(`*`, async (req, res) => {
+	res.sendFile(path.join(__dirname, `/views/404.html`));
+});
