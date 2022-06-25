@@ -5,10 +5,10 @@
   "main": "index.js",
   "scripts": {
 	"copy-static": "cp -r src/public src/views dist",
-	"clean": "rimraf dist",
-	"build": "pnpm clean && tsc",
-	"watch": "tsc -w",
 	"postinstall": "husky install",
+	"clean": "rimraf dist",
+	"build": "pnpm clean && tsc && pnpm copy-static",
+	"watch": "tsc -w",
 	"format": "prettier --write \"src/**/*.{js,ts,css,html}\"",
 	"lint": "eslint \"src/**/*.{js,ts}\" --fix",
 	"cm": "git add . && git-cz",

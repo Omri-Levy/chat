@@ -1,16 +1,15 @@
 FROM node:18-alpine
 ENV NODE_ENV development
 RUN npm i pnpm -g
-
 WORKDIR /app
 
-COPY ../package.json ./
-COPY ../pnpm-lock.yaml ./
-COPY ../.npmrc ./
+COPY ./package.json ./
+COPY ./pnpm-lock.yaml ./
+COPY ./.npmrc ./
 
 RUN pnpm install
 
-COPY ../ ./
+COPY ./ ./
 
 RUN pnpm build
 
