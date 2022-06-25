@@ -7,15 +7,16 @@ services:
       - '80:80'
       - '443:443'
     volumes:
-        - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+      - ./certificates/haproxy.pem:/usr/local/etc/haproxy/haproxy.pem
     restart: always
     depends_on:
       - server
   server:
     container_name: server
     build:
-        context: ..
-        dockerfile: ./infra/Dockerfile
+      context: ..
+      dockerfile: ./infra/Dockerfile
     restart: always
     depends_on:
       - redis

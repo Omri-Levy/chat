@@ -29,8 +29,9 @@ const messagesEl = document.querySelector(`.messages`);
 const pageTitleEl = document.querySelector(`h2`);
 const errorEl = document.querySelector(`.error`);
 const isTypingContainerEl = document.querySelector(`.is-typing-container`);
-const socket = io(`http://${document.location.hostname}:80/chat`, {
+const socket = io(`https://${document.location.hostname}:443/chat`, {
 	autoConnect: false,
+	secure: true,
 });
 connect(socket, username);
 

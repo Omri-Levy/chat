@@ -1,4 +1,6 @@
-const socket = io(`http://${document.location.hostname}:80`);
+const socket = io(`https://${document.location.hostname}:443`, {
+	secure: true,
+});
 const availableRoomsEl = document.querySelector(`.available-rooms`);
 const errorEl = document.querySelector(`.error`);
 const formEl = document.querySelector(`form`);
