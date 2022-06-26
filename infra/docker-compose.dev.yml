@@ -18,6 +18,10 @@ services:
       context: ..
       dockerfile: ./infra/Dockerfile.dev
     restart: always
+    environment:
+      PORT: 80
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       - redis
     volumes:

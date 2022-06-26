@@ -8,7 +8,6 @@ COPY ./.npmrc ./
 
 RUN pnpm install
 
-COPY ./.env ./
 COPY ./tsconfig.json ./
 COPY ./src ./src
 COPY ./node_modules ./node_modules
