@@ -48,14 +48,9 @@ jobs:
       - name: Build
         run: pnpm build
       - name: Docker login
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_TOKEN }}
-        run: |
-        docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Docker push
-        run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/chat-server . -f infra/Dockerfile
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/chat-server . -f infra/Dockerfile
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/chat-server
       - name: Docker pull
         uses: appleboy/ssh-action@master
