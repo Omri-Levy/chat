@@ -48,7 +48,10 @@ jobs:
       - name: Build
         run: pnpm build
       - name: Docker login
-        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
       - name: Docker push
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/chat-server . -f infra/Dockerfile
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/chat-server
