@@ -21,7 +21,6 @@ ENV NODE_ENV production
 
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/package.json ./
-COPY --from=base /app/.env ./
 COPY --from=base /app/dist ./dist
 
 EXPOSE 80

@@ -1,6 +1,0 @@
-#!/bin/zsh
-
-docker build -t omrilevy0197/chat-server .. -f Dockerfile
-docker push omrilevy0197/chat-server
-ssh -i ~/.ssh/ssh.pem ec2-user@3.125.220.5 "docker pull omrilevy0197/chat-server &&
-docker-compose up -d --force-recreate --build"
