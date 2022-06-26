@@ -63,12 +63,10 @@ jobs:
         uses: appleboy/ssh-action@master
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          HOST: ${{ secrets.HOST }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         with:
-          host: $HOST
+          host: ${{ secrets.HOST }}
           username: ec2-user
-          key: $PRIVATE_KEY
+          key: ${{ secrets.PRIVATE_KEY }}
           envs: GITHUB_SHA
           command: |
             docker pull $DOCKERHUB_USERNAME/chat-server
