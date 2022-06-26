@@ -49,7 +49,7 @@ export class Io {
 		clothingColor: [`tail01`],
 	});
 	throttle: {
-		[ip: string]: { count: number; timeout: NodeJS.Timeout | null };
+		[ip: string]: { count: number; timeout: NodeJS.Timeout | undefined };
 	} = {};
 	THROTTLE_TIMEOUT = 3;
 
@@ -260,7 +260,7 @@ export class Io {
 		};
 		// In case someone will try and modify the localStorage entry.
 		const sessionId = DOMPurify.sanitize(socket.handshake.auth.sessionId);
-		const [{ room, username }, errors] = await zParse(
+		const [{ room, username } = {}, errors] = await zParse(
 			authSchema,
 			sanitized
 		);
@@ -302,7 +302,7 @@ export class Io {
 		}
 
 		socket.user = {
-			sessionId: v4(),
+			sessionId: sessionId ?? v4(),
 			room,
 			username,
 			avatar: createAvatar(styles, {
@@ -344,20 +344,18 @@ export class Io {
 	}
 
 	shouldThrottle(socket: SocketWithUser) {
-		if (!this.throttle[socket.handshake.address]) {
-			this.throttle[socket.handshake.address] = {
-				count: 0,
-				timeout: null,
-			};
-		}
+		this.throttle[socket.handshake.address] ??= {
+			count: 0,
+			timeout: undefined,
+		};
+
+		clearTimeout(this.throttle[socket.handshake.address].timeout);
+
+		this.throttle[socket.handshake.address].timeout = setTimeout(() => {
+			this.throttle[socket.handshake.address].count = 0;
+		}, this.THROTTLE_TIMEOUT * 1000);
 
 		if (this.throttle[socket.handshake.address].count >= 3) {
-			clearTimeout(this.throttle[socket.handshake.address].timeout!);
-
-			this.throttle[socket.handshake.address].timeout = setTimeout(() => {
-				this.throttle[socket.handshake.address].count = 0;
-			}, this.THROTTLE_TIMEOUT * 1000);
-
 			return true;
 		}
 

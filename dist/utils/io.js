@@ -206,7 +206,7 @@ class Io {
         };
         // In case someone will try and modify the localStorage entry.
         const sessionId = DOMPurify.sanitize(socket.handshake.auth.sessionId);
-        const [{ room, username }, errors] = await (0, z_parse_1.zParse)(schemas_1.authSchema, sanitized);
+        const [{ room, username } = {}, errors] = await (0, z_parse_1.zParse)(schemas_1.authSchema, sanitized);
         if (errors) {
             const err = new Error(`Validation Error`);
             err.data = errors;
@@ -230,7 +230,7 @@ class Io {
             return next();
         }
         socket.user = {
-            sessionId: (0, uuid_1.v4)(),
+            sessionId: sessionId ?? (0, uuid_1.v4)(),
             room,
             username,
             avatar: (0, avatars_1.createAvatar)(styles, {
@@ -262,17 +262,15 @@ class Io {
         });
     }
     shouldThrottle(socket) {
-        if (!this.throttle[socket.handshake.address]) {
-            this.throttle[socket.handshake.address] = {
-                count: 0,
-                timeout: null,
-            };
-        }
+        this.throttle[socket.handshake.address] ??= {
+            count: 0,
+            timeout: undefined,
+        };
+        clearTimeout(this.throttle[socket.handshake.address].timeout);
+        this.throttle[socket.handshake.address].timeout = setTimeout(() => {
+            this.throttle[socket.handshake.address].count = 0;
+        }, this.THROTTLE_TIMEOUT * 1000);
         if (this.throttle[socket.handshake.address].count >= 3) {
-            clearTimeout(this.throttle[socket.handshake.address].timeout);
-            this.throttle[socket.handshake.address].timeout = setTimeout(() => {
-                this.throttle[socket.handshake.address].count = 0;
-            }, this.THROTTLE_TIMEOUT * 1000);
             return true;
         }
         this.throttle[socket.handshake.address].count++;

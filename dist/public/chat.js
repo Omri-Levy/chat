@@ -59,10 +59,10 @@ const renderMessage = ({ avatar, from, body, timestamp }) => {
             ${avatar}
             </div>
             <div class="flex">
-                <strong class="mt-2px username break-words" dir="auto">${
+                <strong class="username mt-2px" dir="auto">${
 					isSameUser ? `You` : from
 				}:</strong>
-                <div class="flex mx-primary message" dir="auto">
+                <div class="flex mx-primary word-wrap message" dir="auto">
                    ${body}
                 </div>
             </div>
@@ -171,7 +171,7 @@ const onInput = () => {
 	timeout = setTimeout(() => {
 		isTyping = false;
 		socket.emit(`stop-typing`);
-	}, 20000);
+	}, 2000);
 
 	if (isTyping) return;
 

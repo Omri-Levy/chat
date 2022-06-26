@@ -32,6 +32,21 @@
 	--underline-offset-primary: 1px;
 }
 
+*,
+*::before,
+*::after {
+	line-height: 1;
+	box-sizing: border-box;
+	padding: 0;
+	margin: 0;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+	font-family: var(--font-body);
+	font-weight: 400;
+	letter-spacing: 2px;
+}
+
 html {
 	background-color: var(--color-primary);
 }
@@ -40,6 +55,10 @@ html,
 body,
 container {
 	height: 100%;
+}
+
+body {
+	padding-inline: var(--spacing-1);
 }
 
 li {
@@ -98,21 +117,6 @@ a:visited {
 	border: var(--border-primary);
 	border-right: none;
 	background: var(--color-accent-primary);
-}
-
-*,
-*::before,
-*::after {
-	line-height: 1;
-	box-sizing: border-box;
-	padding: 0;
-	margin: 0;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	text-rendering: optimizeLegibility;
-	font-family: var(--font-body);
-	font-weight: 400;
-	letter-spacing: 2px;
 }
 
 h1,
@@ -191,10 +195,6 @@ h5 {
 	font-size: var(--font-size-6);
 }
 
-body {
-	padding-inline: var(--spacing-1);
-}
-
 .container {
 	margin-inline: auto;
 	max-width: var(--screen-1);
@@ -205,10 +205,7 @@ body {
 }
 
 .message {
-	word-break: break-word;
-	max-width: 40ch;
 	margin-block: 0;
-	width: 100%;
 }
 
 .avatar {
@@ -302,7 +299,7 @@ label {
 .error {
 	min-height: 3rem;
 	font-size: var(--font-size-5);
-	margin-top: 8vh;
+	margin-top: 3.75rem;
 	margin-bottom: var(--spacing-1);
 	margin-inline: auto;
 	max-width: var(--screen-2);
@@ -423,22 +420,22 @@ header {
 	margin-top: 2px;
 }
 
-.break-words {
-	word-break: break-word;
+.word-wrap {
+	word-wrap: anywhere;
 }
 
 .room-name {
 	max-width: 30ch;
-	word-break: break-word;
+	word-wrap: anywhere;
 }
 
 .users {
-	max-width: 15ch;
-	word-break: break-word;
+	max-width: 14ch;
+	word-wrap: anywhere;
 }
 
 .room-link {
-	word-break: break-word;
+	word-wrap: anywhere;
 	max-width: 25ch;
 }
 
@@ -455,7 +452,7 @@ header {
 }
 
 .is-typing {
-	word-break: break-word;
+	word-wrap: anywhere;
 	margin-bottom: var(--spacing-3);
 }
 
@@ -468,10 +465,12 @@ header {
 	animation: typing steps(10, end) 1s infinite;
 }
 
-.username {
-	min-width: 9ch;
-}
-
 .link-404 {
 	font-size: var(--font-size-2);
+}
+
+.username {
+	max-width: 14ch;
+	flex-shrink: 0;
+	word-wrap: anywhere;
 }
