@@ -63,11 +63,13 @@ jobs:
         uses: appleboy/ssh-action@master
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          HOST: ${{ secrets.HOST }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         with:
-          host: ${{ secrets.HOST }}
+          host: $HOST
           username: ec2-user
-          key: ${{ secrets.PRIVATE_KEY }}
+          key: $PRIVATE_KEY
           envs: GITHUB_SHA
-          command: |
+          script: |
             docker pull $DOCKERHUB_USERNAME/chat-server
             docker-compose -d --force-recreate
