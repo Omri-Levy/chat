@@ -64,11 +64,10 @@ jobs:
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           HOST: ${{ secrets.HOST }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         with:
-          host: $HOST
           username: ec2-user
-          key: $PRIVATE_KEY
+          host: $HOST
+          key: ${{ secrets.PRIVATE_KEY }}
           envs: GITHUB_SHA
           script: |
             docker pull $DOCKERHUB_USERNAME/chat-server
